@@ -4,12 +4,12 @@ import { useDebouncedCallback } from 'use-debounce';
 import 'modern-normalize/modern-normalize.css';
 import css from './App.module.css';
 
-import { fetchNotes, createNote, deleteNote, type CreateNotePayload } from './services/noteService';
-import NoteList from './components/NoteList/NoteList';
-import Pagination from './components/Pagination/Pagination';
-import SearchBox from './components/SearchBox/SearchBox';
-import Modal from './components/Modal/Modal';
-import NoteForm from './components/NoteForm/NoteForm';
+import { fetchNotes, createNote, deleteNote, type CreateNotePayload } from '../../services/noteService';
+import NoteList from '../NoteList/NoteList';
+import Pagination from '../Pagination/Pagination';
+import SearchBox from '../SearchBox/SearchBox';
+import Modal from '../Modal/Modal';
+import NoteForm from '../NoteForm/NoteForm';
 
 function App() {
   const [page, setPage] = useState(1);
