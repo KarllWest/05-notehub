@@ -3,9 +3,6 @@ import type { Note } from '../types/note';
 
 export interface FetchNotesResponse {
   notes: Note[];
-  page: number;
-  perPage: number;
-  totalItems: number;
   totalPages: number;
 }
 
