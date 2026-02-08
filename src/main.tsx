@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// ОНОВЛЕНИЙ ІМПОРТ: Тепер App знаходиться в папці components/App
 import App from './components/App/App';
 import './index.css';
 

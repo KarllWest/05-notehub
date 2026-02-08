@@ -1,13 +1,9 @@
 import React from 'react';
-// @ts-ignore
 import ReactPaginateImport from 'react-paginate';
 import css from './Pagination.module.css';
 
-// Хак для виправлення помилки "Element type is invalid" у Vite
-// Якщо бібліотека завантажилась як об'єкт, ми беремо з неї .default
-const ReactPaginate = (ReactPaginateImport as any).default 
-  ? (ReactPaginateImport as any).default 
-  : ReactPaginateImport;
+const ReactPaginate = (ReactPaginateImport as unknown as { default: React.ComponentType<any> }).default 
+  || ReactPaginateImport;
 
 interface PaginationProps {
   totalPages: number;

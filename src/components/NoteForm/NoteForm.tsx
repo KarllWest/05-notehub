@@ -1,17 +1,29 @@
 import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import css from './NoteForm.module.css';
-import type { CreateNotePayload } from '../../services/noteService';
+import { createNote } from '../../services/noteService'; 
 import type { NoteTag } from '../../types/note';
 
 interface NoteFormProps {
-  onSubmit: (values: CreateNotePayload) => void;
-  onCancel: () => void;
-  isLoading?: boolean;
+  onClose: () => void;
 }
 
-const NoteForm: React.FC<NoteFormProps> = ({ onSubmit, onCancel, isLoading = false }) => {
+const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      onClose();
+    },
+    onError: (error: any) => {
+       alert(`Error: ${error.message}`);
+    }
+  });
+
   const formik = useFormik({
     initialValues: {
       title: '',
@@ -20,7 +32,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSubmit, onCancel, isLoading = fal
     },
     validationSchema: Yup.object({
       title: Yup.string()
-        .min(3, 'Minimum 3 characters') // Перевірте, чи ви вводите більше 3 літер!
+        .min(3, 'Minimum 3 characters')
         .max(50, 'Maximum 50 characters')
         .required('Required'),
       content: Yup.string().max(500, 'Maximum 500 characters'),
@@ -29,15 +41,9 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSubmit, onCancel, isLoading = fal
         .required('Required'),
     }),
     onSubmit: (values) => {
-      console.log('✅ Форма валідна, відправляємо дані:', values);
-      onSubmit(values);
+      mutation.mutate(values);
     },
   });
-
-  // Допомагає побачити помилки в консолі браузера
-  if (Object.keys(formik.errors).length > 0 && formik.touched.title) {
-    console.log('❌ Помилки валідації:', formik.errors);
-  }
 
   return (
     <form className={css.form} onSubmit={formik.handleSubmit}>
@@ -51,7 +57,6 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSubmit, onCancel, isLoading = fal
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           value={formik.values.title}
-          placeholder="Enter at least 3 characters..."
         />
         {formik.touched.title && formik.errors.title ? (
           <span className={css.error}>{formik.errors.title}</span>
@@ -99,17 +104,16 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSubmit, onCancel, isLoading = fal
         <button
           type="button"
           className={css.cancelButton}
-          onClick={onCancel}
+          onClick={onClose}
         >
           Cancel
         </button>
-        {/* Кнопка тепер завжди активна, щоб показати помилки при кліку */}
         <button
           type="submit"
           className={css.submitButton}
-          disabled={isLoading}
+          disabled={mutation.isPending}
         >
-          {isLoading ? 'Creating...' : 'Create note'}
+          {mutation.isPending ? 'Creating...' : 'Create note'}
         </button>
       </div>
     </form>

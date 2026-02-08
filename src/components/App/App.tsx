@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useDebouncedCallback } from 'use-debounce';
 import 'modern-normalize/modern-normalize.css';
 import css from './App.module.css';
 
-import { fetchNotes, createNote, deleteNote, type CreateNotePayload } from '../../services/noteService';
+import { fetchNotes } from '../../services/noteService';
 import NoteList from '../NoteList/NoteList';
 import Pagination from '../Pagination/Pagination';
 import SearchBox from '../SearchBox/SearchBox';
@@ -18,35 +18,10 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const perPage = 12;
 
-  const queryClient = useQueryClient();
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', page, search],
     queryFn: () => fetchNotes({ page, perPage, search }),
     placeholderData: (previousData) => previousData,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      console.log("✅ Успіх! Нотатка створена на сервері.");
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      setIsModalOpen(false);
-      setPage(1);
-      setSearch('');
-      setInputValue('');
-    },
-    onError: (error: any) => {
-      console.error("❌ Помилка запиту:", error);
-      alert(`Помилка створення: ${error.response?.data?.message || error.message}`);
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
   });
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
@@ -63,18 +38,15 @@ function App() {
     setPage(selected + 1);
   };
 
-  const handleCreateNote = (values: CreateNotePayload) => {
-    createMutation.mutate(values);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setPage(1); 
+    setSearch('');
+    setInputValue('');
   };
 
-  const handleDeleteNote = (id: string) => {
-    deleteMutation.mutate(id);
-  };
-
-  // Безпечний доступ до масиву нотаток
- const notes = data?.notes;
+  const notes = data?.notes;
   const totalPages = data?.totalPages ?? 0;
-  console.log("🔍 Дані від сервера:", data);
 
   return (
     <div className={css.app}>
@@ -88,13 +60,10 @@ function App() {
       {isLoading && <p>Loading notes...</p>}
       {isError && <p>Error loading notes!</p>}
 
-      {/* ВИПРАВЛЕННЯ: Використовуємо знаки питання ?. перед .length */}
-      {/* (notes?.length ?? 0) > 0 означає: якщо довжина є, бери її, якщо ні - бери 0 */}
       {Array.isArray(notes) && notes.length > 0 && (
-        <NoteList notes={notes} onDelete={handleDeleteNote} />
+        <NoteList notes={notes} />
       )}
 
-      {/* ВИПРАВЛЕННЯ: Безпечна перевірка пагінації */}
       {totalPages > 1 && (
         <Pagination
           totalPages={totalPages}
@@ -104,11 +73,7 @@ function App() {
       )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <NoteForm
-          onSubmit={handleCreateNote}
-          onCancel={() => setIsModalOpen(false)}
-          isLoading={createMutation.isPending}
-        />
+        <NoteForm onClose={handleCloseModal} />
       </Modal>
     </div>
   );
